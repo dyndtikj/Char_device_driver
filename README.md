@@ -16,3 +16,5 @@
 ### Move offset to begin and read all
 ### As we see driver works correctly(* as author expected)
 ![Im1](./images/1.png)
+### Kernel log
+![Im2](./images/2.png)
