@@ -1,1 +1,13 @@
-*.o *.ko *.cmd *.flags *.mod.c *.dwo *.mod *.ko.cmd *.mod.cmd *.mod.o.mod *.o.cmd *.symvers.cmd *.order.cmd
+*.o
+*.ko
+*.cmd
+*.flags
+*.mod.c
+*.dwo
+*.mod
+*.ko.cmd
+*.mod.cmd
+*.mod.o.mod
+*.o.cmd
+*.symvers.cmd
+*.order.cmd
