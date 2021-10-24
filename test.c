@@ -43,6 +43,7 @@ int main()
     scanf("%d", &count);
     __fpurge(stdin);
     read(fd, read_buf, count);
+    read_buf[count] = '\0'; 
     printf("Read data: %s\n", read_buf);
 
     lseek(fd,0,0);
@@ -50,5 +51,6 @@ int main()
     read(fd, read_buf, LENGTH);
     printf("Read all: %s\n", read_buf);
     printf("Bye!...\n");
+    close(fd);
     getchar();
 }
