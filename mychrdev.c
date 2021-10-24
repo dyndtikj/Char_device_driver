@@ -17,11 +17,11 @@ static int mychardev_open(struct inode *inode, struct file *file);
 static int mychardev_release(struct inode *inode, struct file *file);
 static ssize_t mychardev_read(struct file *file, char __user *buf, size_t count, loff_t *ppos);
 static ssize_t mychardev_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos);
-//static loff_t mychardev_llseek(struct file *file, loff_t* ppos);
+static loff_t mychardev_llseek(struct file *file, loff_t ppos, int whence);
 
 static const struct file_operations mychardev_fops = {
     .owner      = THIS_MODULE,
-    //.llseek     = mychardev_llseek,
+    .llseek     = mychardev_llseek,
     .open       = mychardev_open,
     .release    = mychardev_release,
     .read       = mychardev_read,
@@ -88,7 +88,29 @@ static void __exit mychardev_exit(void)
     unregister_chrdev_region(MKDEV(dev_major, 0), MINORMASK);
 }
 
-static loff_t mychardev_llseek(struct file *file, loff_t* ppos);
+static loff_t mychardev_llseek(struct file *file, loff_t ppos, int whence){
+    if (ppos < 0 || ppos >= DEV_SIZE){
+        printk(KERN_INFO "Bad lseek parametr");
+        return -EFAULT;
+    }
+    printk("offset %d moved to ", (int)file->f_pos);
+    switch (whence) {
+    case 0:
+        file->f_pos = ppos;
+        break;
+    case 1:
+        file->f_pos += ppos;
+        break;
+    case 2:
+        file->f_pos = DEV_SIZE + ppos;
+        break;
+    default:
+        printk(KERN_ALERT "WRONG PARAMETR FOR LSEEK\n");
+        return -EFAULT;
+    }
+    printk("%d Success!\n", (int)file->f_pos);
+    return file->f_pos;
+}
 
 static int mychardev_open(struct inode *inode, struct file *file)
 {
@@ -127,12 +149,12 @@ static ssize_t mychardev_read(struct file *file, char __user *buf, size_t count,
         printk(KERN_ALERT "Too big count to read\n");
         return -EFAULT;
     }
-    int nbytes = copy_to_user(buf, file->private_data, count);
+    int nbytes = copy_to_user(buf, file->private_data + *ppos, count);
     if (nbytes != 0){
         printk(KERN_ALERT "Too big count to read\n");
         return -EFAULT;
     }
-    //*f_offset += count ;
+    *ppos += count ;
     return nbytes;
 }
 
