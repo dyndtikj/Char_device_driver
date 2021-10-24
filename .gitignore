@@ -1,0 +1,1 @@
+*.o *.ko *.cmd *.flags *.mod.c *.dwo *.mod

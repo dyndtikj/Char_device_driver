@@ -1,0 +1,1 @@
+cmd_/home/maks/src/chardev_module/chardev.ko := ld -r -m elf_x86_64  --build-id=sha1  -T scripts/module.lds -o /home/maks/src/chardev_module/chardev.ko /home/maks/src/chardev_module/chardev.o /home/maks/src/chardev_module/chardev.mod.o;  true
