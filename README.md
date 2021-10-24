@@ -3,6 +3,9 @@ Linux kernel module for symbolic devices (count can be defined in mychardev.c)
 
 To make, insmod and test module write ./run.sh command, you will see an inteface for testing.
 
+### Write command writes from current offset, writting to the opened file will add data, not rewritting
+### To rewrite close file
+
 ## Write to file
 
 ![Im1](./images/2.png)
