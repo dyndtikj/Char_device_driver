@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-#define DEVICE_FILE "/dev/mychardev-0"
+#define DEVICE_FILE "/dev/my_cdev0"
 #define LENGTH      256
 
 int main()
@@ -16,6 +16,7 @@ int main()
 
     assert(fd = open(DEVICE_FILE, O_RDWR));
 
+    printf("Tessting %s\n",DEVICE_FILE);
     printf("%s", "Enter data: ");
     scanf("%s", write_buf);
     __fpurge(stdin);
