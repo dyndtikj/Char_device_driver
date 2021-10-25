@@ -136,37 +136,39 @@ static int chardev_release(struct inode *inode, struct file *file)
 
 static ssize_t chardev_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 {
+    int nbytes = 0;
     int minor = MINOR(file->f_path.dentry->d_inode->i_rdev);
     printk(KERN_INFO "Writing to device my_cdev%d, offset - %llu....\n", minor, (long long unsigned)*ppos);
     if (count > DEV_SIZE){
         printk(KERN_ALERT "Too big count to write\n");
         return -EFAULT;
     }
-    int nbytes = copy_from_user(file->private_data + *ppos, buf, count);
+    nbytes = copy_from_user(file->private_data + *ppos, buf, count);
     *ppos += (count - nbytes);
     if (nbytes != 0){
         printk(KERN_ALERT "Too big count to write\n");
         return -EFAULT;
     }
-    printk(KERN_INFO "Wrote %d bytes, current offset - %llu\n", count,(long long unsigned)*ppos);
+    printk(KERN_INFO "Wrote %ld bytes, current offset - %llu\n", count,(long long unsigned)*ppos);
     return 0;
 }
 
 static ssize_t chardev_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
+    int nbytes = 0;
     int minor = MINOR(file->f_path.dentry->d_inode->i_rdev);
     printk(KERN_INFO "Reading from device my_cdev%d, offset - %llu....\n", minor, (long long unsigned)*ppos);
     if (count > DEV_SIZE){
         printk(KERN_ALERT "Too big count to read\n");
         return -EFAULT;
     }
-    int nbytes = copy_to_user(buf, file->private_data + *ppos, count);
+    nbytes = copy_to_user(buf, file->private_data + *ppos, count);
     if (nbytes != 0){
         printk(KERN_ALERT "Too big count to read\n");
         return -EFAULT;
     }
     *ppos += count ;
-    printk(KERN_INFO "Read %d bytes, current offset - %llu\n", count,(long long unsigned)*ppos);
+    printk(KERN_INFO "Read %ld bytes, current offset - %llu\n", count,(long long unsigned)*ppos);
     return nbytes;
 }
 
