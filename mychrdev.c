@@ -43,20 +43,43 @@ static int chardev_uevent(struct device *dev, struct kobj_uevent_env *env)
     return 0;
 }
 
+static void chardev_safe_destroy(void){
+    int i;
+    for (i = 0; i < DEV_COUNT; i++) {
+        if (chardev_class)
+            device_destroy(chardev_class, MKDEV(dev_major, i));
+        if (chardev_data[i].data)
+            kfree(chardev_data[i].data);
+    }
+    if (chardev_class) {
+        class_unregister(chardev_class);
+        class_destroy(chardev_class);
+        unregister_chrdev_region(MKDEV(dev_major, 0), MINORMASK);
+    }
+    return;
+}
+
 static int __init chardev_init(void)
 {
     int error, i;
     dev_t dev;
-
+    printk("Module initialized!\n");
+    
     error = alloc_chrdev_region(&dev, 0, DEV_COUNT, "mychardev");
     if (error) {
         printk(KERN_ALERT "Can't assign major and minor numbers\n");
-        return -EFAULT;
+        chardev_safe_destroy();
+        return -1;
     }
 
     dev_major = MAJOR(dev);
 
     chardev_class = class_create(THIS_MODULE, "mychardev");
+    if (chardev_class == NULL) {
+        printk(KERN_ALERT "Can't create class\n");
+        chardev_safe_destroy();
+        return -1;
+    }
     chardev_class->dev_uevent = chardev_uevent;
 
     for (i = 0; i < DEV_COUNT; i++) {
@@ -66,33 +89,31 @@ static int __init chardev_init(void)
         error = cdev_add(&chardev_data[i].cdev, MKDEV(dev_major, i), 1);
         if (error){
             printk(KERN_ALERT "Can't add char device %d\n",i);
-            return -EFAULT; 
+            chardev_safe_destroy();
+            return -1; 
         }
         chardev_data[i].data = kmalloc(DEV_SIZE, GFP_KERNEL);
         if (!chardev_data[i].data) {
             printk(KERN_ALERT "Malloc fail for device %d\n!",i);
-            return -EFAULT;
+            chardev_safe_destroy();
+            return -1;
         }
 
         memset(chardev_data[i].data, 0, DEV_SIZE);
-        device_create(chardev_class, NULL, MKDEV(dev_major, i), NULL, "my_cdev%d", i);
+
+        if (device_create(chardev_class, NULL, MKDEV(dev_major, i), NULL, "my_cdev%d", i) == NULL){
+            printk(KERN_ALERT "Can't create device %d\n",i);
+            chardev_safe_destroy();
+            return -1; 
+        }
     }
     return 0;
 }
 
 static void __exit chardev_exit(void)
 {
-    int i;
-
-    for (i = 0; i < DEV_COUNT; i++) {
-        device_destroy(chardev_class, MKDEV(dev_major, i));
-        if (chardev_data[i].data)
-            kfree(chardev_data[i].data);
-    }
-
-    class_unregister(chardev_class);
-    class_destroy(chardev_class);
-    unregister_chrdev_region(MKDEV(dev_major, 0), MINORMASK);
+    printk("Module removed from system!\n");
+    chardev_safe_destroy();
 }
 
 static loff_t chardev_llseek(struct file *file, loff_t ppos, int whence){

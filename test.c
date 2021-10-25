@@ -16,18 +16,18 @@ int main()
 
     assert(fd = open(DEVICE_FILE, O_RDWR));
 
-    printf("Tessting %s\n",DEVICE_FILE);
+    printf("Testing %s\n",DEVICE_FILE);
     printf("%s", "Enter data: ");
     scanf("%s", write_buf);
     __fpurge(stdin);
     write(fd, write_buf, strlen(write_buf));
-    printf("Written %d bytes\n", strlen(write_buf));
+    printf("Written %ld bytes\n", strlen(write_buf));
 
     printf("%s", "Enter data: ");
     scanf("%s", write_buf);
     __fpurge(stdin);
     write(fd, write_buf, strlen(write_buf));
-    printf("Added %d bytes\n", strlen(write_buf));
+    printf("Added %ld bytes\n", strlen(write_buf));
 
     lseek(fd,0,0);
 
