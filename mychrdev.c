@@ -29,6 +29,7 @@ static const struct file_operations chardev_fops = {
 
 struct char_device_data {
     char *data;
+    size_t lengh;
     struct cdev cdev;
 };
 
@@ -64,7 +65,6 @@ static int __init chardev_init(void)
     int error, i;
     dev_t dev;
     printk("Module initialized!\n");
-    
     error = alloc_chrdev_region(&dev, 0, DEV_COUNT, "mychardev");
     if (error) {
         printk(KERN_ALERT "Can't assign major and minor numbers\n");
@@ -93,6 +93,7 @@ static int __init chardev_init(void)
             return -1; 
         }
         chardev_data[i].data = kmalloc(DEV_SIZE, GFP_KERNEL);
+        chardev_data[i].lengh = 0;
         if (!chardev_data[i].data) {
             printk(KERN_ALERT "Malloc fail for device %d\n!",i);
             chardev_safe_destroy();
@@ -161,17 +162,17 @@ static ssize_t chardev_write(struct file *file, const char __user *buf, size_t c
     int minor = MINOR(file->f_path.dentry->d_inode->i_rdev);
     printk(KERN_INFO "Writing to device my_cdev%d, offset - %llu....\n", minor, (long long unsigned)*ppos);
     if (count > DEV_SIZE){
-        printk(KERN_ALERT "Too big count to write\n");
+        printk(KERN_ALERT "Count to write bigger then size, can't read\n");
         return -EFAULT;
+    }
+    if (DEV_SIZE < *ppos + count){
+        printk(KERN_ALERT "Too big count to write, was written less then expected!\n");
     }
     nbytes = copy_from_user(file->private_data + *ppos, buf, count);
     *ppos += (count - nbytes);
-    if (nbytes != 0){
-        printk(KERN_ALERT "Too big count to write\n");
-        return -EFAULT;
-    }
-    printk(KERN_INFO "Wrote %ld bytes, current offset - %llu\n", count,(long long unsigned)*ppos);
-    return 0;
+    *ppos > chardev_data[minor].lengh ? chardev_data[minor].lengh = *ppos : 0 ;
+    printk(KERN_INFO "Wrote %ld bytes, current offset - %llu\n", count-nbytes,(long long unsigned)*ppos);
+    return count - nbytes;
 }
 
 static ssize_t chardev_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
@@ -180,17 +181,17 @@ static ssize_t chardev_read(struct file *file, char __user *buf, size_t count, l
     int minor = MINOR(file->f_path.dentry->d_inode->i_rdev);
     printk(KERN_INFO "Reading from device my_cdev%d, offset - %llu....\n", minor, (long long unsigned)*ppos);
     if (count > DEV_SIZE){
-        printk(KERN_ALERT "Too big count to read\n");
+        printk(KERN_ALERT "Count to read bigger then size, can't read\n");
         return -EFAULT;
+    }
+    if (chardev_data[minor].lengh < *ppos + count){
+        printk(KERN_ALERT "Too big count to read, was read less then expected!\n");
+        count = chardev_data[minor].lengh - *ppos;
     }
     nbytes = copy_to_user(buf, file->private_data + *ppos, count);
-    if (nbytes != 0){
-        printk(KERN_ALERT "Too big count to read\n");
-        return -EFAULT;
-    }
-    *ppos += count ;
+    *ppos += count;
     printk(KERN_INFO "Read %ld bytes, current offset - %llu\n", count,(long long unsigned)*ppos);
-    return nbytes;
+    return count;
 }
 
 module_init(chardev_init);

@@ -36,15 +36,15 @@ int main()
     int count = 0;
     scanf("%d", &count);
     __fpurge(stdin);
-    read(fd, read_buf, count);
-    read_buf[count] = '\0'; 
+    int real = read(fd, read_buf, count);
+    read_buf[real] = '\0'; 
     printf("Read data: %s\n", read_buf);
 
     printf("Read from current offset, enter count : ");
     scanf("%d", &count);
     __fpurge(stdin);
-    read(fd, read_buf, count);
-    read_buf[count] = '\0'; 
+    real = read(fd, read_buf, count);
+    read_buf[real] = '\0'; 
     printf("Read data: %s\n", read_buf);
 
     lseek(fd,0,0);
