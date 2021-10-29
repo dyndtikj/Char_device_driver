@@ -189,9 +189,9 @@ static ssize_t chardev_read(struct file *file, char __user *buf, size_t count, l
         count = chardev_data[minor].lengh - *ppos;
     }
     nbytes = copy_to_user(buf, file->private_data + *ppos, count);
-    *ppos += count;
+    *ppos += (count-nbytes);
     printk(KERN_INFO "Read %ld bytes, current offset - %llu\n", count,(long long unsigned)*ppos);
-    return count;
+    return count - nbytes;
 }
 
 module_init(chardev_init);
